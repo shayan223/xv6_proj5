@@ -121,6 +121,9 @@ allocproc(void)
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  #ifdef CS333_P1
+  p->start_ticks = ticks;
+  #endif
   return p;
 }
 
@@ -544,4 +547,8 @@ procdump(void)
     }
     cprintf("\n");
   }
+  
+  #ifdef CS333_P1
+  cprintf("%d", (p->start_ticks)/1000);
+  #endif
 }
