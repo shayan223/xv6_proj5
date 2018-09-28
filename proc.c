@@ -531,7 +531,49 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
+ 
+  #ifdef CS333_P1
+  cprintf("\n|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "Elapsed", "State", "Size", "PCs");
+  #endif 
 
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED)
+      continue;
+    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+/*--------------------------------------------------------*/
+    #ifdef CS333_P1
+    getcallerpcs((uint*)p->context->ebp+2, pc);
+
+    int sec = ((ticks - p->start_ticks)/1000);
+    int remainder = ((ticks - p->start_ticks) % 1000);
+   // cprintf("|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "Elapsed", "State", "Size", "PCs");
+    cprintf("|%d\t|%s\t|%d%s%d\t\t|%s\t|%d\t|", p->pid, p->name, sec, ".", remainder, state, p->sz); 
+  
+    for(i=0; i<10 && pc[i] != 0; i++)
+      cprintf(" %p", pc[i]);
+    cprintf("\n"); 
+ 
+
+    #else
+/*--------------------------------------------------------*/
+    cprintf("%d\t%s\t%s\t", p->pid, p->name, state);
+
+
+    if(p->state == SLEEPING){
+      getcallerpcs((uint*)p->context->ebp+2, pc);
+      for(i=0; i<10 && pc[i] != 0; i++)
+        cprintf(" %p", pc[i]);
+    }
+    cprintf("\n");
+
+    #endif
+  }
+
+  /*---------------------ORIGINAL---------------------------------------
+  
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -547,8 +589,17 @@ procdump(void)
     }
     cprintf("\n");
   }
-  
+
+  ------------------------------ADDED-----------------------------------*/
+/*  
   #ifdef CS333_P1
-  cprintf("%d", (p->start_ticks)/1000);
+  getcallerpcs((uint*)p->context->ebp+2, pc);
+  cprintf("|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "Elapsed", "State", "Size", "PCs");
+  cprintf("|%d\t|%s\t|%d\t|%s\t|%d\t|", p->pid, p->name, ((p->start_ticks)/1000), p->state, p->sz); 
+  
+  for(i=0; i<10 && pc[i] != 0; i++)
+    cprintf(" %p", pc[i]);
+  cprintf("\n"); 
   #endif
+*/
 }
