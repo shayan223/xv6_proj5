@@ -546,19 +546,21 @@ procdump(void)
 /*--------------------------------------------------------*/
     #ifdef CS333_P1
     getcallerpcs((uint*)p->context->ebp+2, pc);
-
+    
     int sec = ((ticks - p->start_ticks)/1000);
     int remainder = ((ticks - p->start_ticks) % 1000);
-   // cprintf("|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "Elapsed", "State", "Size", "PCs");
-    cprintf("|%d\t|%s\t|%d%s%d\t\t|%s\t|%d\t|", p->pid, p->name, sec, ".", remainder, state, p->sz); 
-  
+    cprintf("|%d\t|%s\t|%d%s", p->pid, p->name, sec, ".");
+    if(remainder<100)
+      cprintf("%d",0);
+    if(remainder<10) 
+      cprintf("%d",0);
+    cprintf("%d\t\t|%s\t|%d\t|", remainder, state, p->sz);
     for(i=0; i<10 && pc[i] != 0; i++)
       cprintf(" %p", pc[i]);
     cprintf("\n"); 
- 
-
-    #else
+     
 /*--------------------------------------------------------*/
+    #else
     cprintf("%d\t%s\t%s\t", p->pid, p->name, state);
 
 
