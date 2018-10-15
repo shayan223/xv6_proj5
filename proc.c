@@ -6,7 +6,9 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-
+#ifdef CS333_P2
+#include "uproc.h"
+#endif
 static char *states[] = {
 [UNUSED]    "unused",
 [EMBRYO]    "embryo",
@@ -124,6 +126,11 @@ allocproc(void)
   #ifdef CS333_P1
   p->start_ticks = ticks;
   #endif
+
+  #ifdef CS333_P2
+  p->cpu_ticks_total = 0;
+  p->cpu_ticks_in = 0;
+  #endif
   return p;
 }
 
@@ -210,7 +217,10 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
-
+  #ifdef CS333_P2
+  np -> uid = curproc -> uid;
+  np -> gid = curproc -> gid;
+  #endif
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -361,6 +371,9 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+#ifdef CS333_P2
+      p->cpu_ticks_in = ticks;
+#endif
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -401,8 +414,12 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
+  #ifdef CS333_P2
+  p -> cpu_ticks_total += ticks - p -> cpu_ticks_in;
+  #endif
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
+
 }
 
 // Give up the CPU for one scheduling round.
@@ -531,10 +548,14 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
- 
-  #ifdef CS333_P1
+
+  
+  #ifdef CS333_P2
+  cprintf("\n|%s\t|%s\t|%s\t|%s\t|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "UID", "GID", "PPID", "Elapsed", "CPU", "State", "Size", "PCs");
+  #elif CS333_P1
   cprintf("\n|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "Elapsed", "State", "Size", "PCs");
   #endif 
+
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -544,7 +565,43 @@ procdump(void)
     else
       state = "???";
 /*--------------------------------------------------------*/
-    #ifdef CS333_P1
+    #ifdef CS333_P2
+    getcallerpcs((uint*)p->context->ebp+2, pc);
+    
+    int sec = ((ticks - p->start_ticks)/1000);
+    int remainder = ((ticks - p->start_ticks) % 1000);
+    cprintf("|%d\t|%s\t|%d\t|%d\t",p->pid, p->name, p->uid, p->gid);
+    
+    if(p -> parent)
+      cprintf("|%d\t", p->parent->pid); 
+    else
+      cprintf("|%d\t", p->pid);
+
+    cprintf("|%d%s", sec, ".");
+    if(remainder<100)
+      cprintf("%d",0);
+    if(remainder<10) 
+      cprintf("%d",0);
+    cprintf("%d\t", remainder);
+    
+    sec = (p -> cpu_ticks_total/1000);
+    remainder = (p -> cpu_ticks_total % 1000);
+    cprintf("\t|%d%s", sec, ".");
+    if(remainder<100)
+      cprintf("%d",0);
+    if(remainder<10) 
+      cprintf("%d",0);
+    cprintf("%d\t", remainder);
+
+    
+    cprintf("|%s\t|%d\t", state, p->sz);
+    for(i=0; i<10 && pc[i] != 0; i++)
+      cprintf(" %p", pc[i]);
+    cprintf("\n"); 
+    
+
+/*--------------------------------------------------------*/
+    #elif CS333_P1
     getcallerpcs((uint*)p->context->ebp+2, pc);
     
     int sec = ((ticks - p->start_ticks)/1000);
@@ -558,8 +615,7 @@ procdump(void)
     for(i=0; i<10 && pc[i] != 0; i++)
       cprintf(" %p", pc[i]);
     cprintf("\n"); 
-     
-/*--------------------------------------------------------*/
+
     #else
     cprintf("%d\t%s\t%s\t", p->pid, p->name, state);
 
@@ -573,35 +629,68 @@ procdump(void)
 
     #endif
   }
-
-  /*---------------------ORIGINAL---------------------------------------
-  
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->state == UNUSED)
-      continue;
-    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-      state = states[p->state];
-    else
-      state = "???";
-    cprintf("%d\t%s\t%s\t", p->pid, p->name, state);
-    if(p->state == SLEEPING){
-      getcallerpcs((uint*)p->context->ebp+2, pc);
-      for(i=0; i<10 && pc[i] != 0; i++)
-        cprintf(" %p", pc[i]);
-    }
-    cprintf("\n");
-  }
-
-  ------------------------------ADDED-----------------------------------*/
-/*  
-  #ifdef CS333_P1
-  getcallerpcs((uint*)p->context->ebp+2, pc);
-  cprintf("|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", "PID", "Name", "Elapsed", "State", "Size", "PCs");
-  cprintf("|%d\t|%s\t|%d\t|%s\t|%d\t|", p->pid, p->name, ((p->start_ticks)/1000), p->state, p->sz); 
-  
-  for(i=0; i<10 && pc[i] != 0; i++)
-    cprintf(" %p", pc[i]);
-  cprintf("\n"); 
-  #endif
-*/
 }
+
+#ifdef CS333_P2
+
+int
+copyProcTable(uint max, struct uproc* table) //gets process info
+{
+  if(!table)
+  {
+    return -1;
+  }
+  acquire(&ptable.lock);
+
+  int count = 0;
+  struct proc * p;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if(count >= max)
+    {
+        break;
+    }
+    if(p -> state != UNUSED && p -> state != EMBRYO)
+    {
+      table[count].pid = p -> pid;
+      table[count].uid = p -> uid;
+      table[count].gid = p -> gid;
+      if(p->parent)
+      {
+        table[count].ppid = p -> parent -> pid;
+      }
+      else
+      {
+        table[count].ppid = p -> pid;
+      }
+      table[count].elapsed_ticks = ticks - p -> start_ticks;
+      table[count].CPU_total_ticks = p -> cpu_ticks_total;
+      safestrcpy(table[count].state, states[p->state], STRMAX);
+      table[count].size = p -> sz;
+      safestrcpy(table[count].name, p->name, sizeof(p->name));
+      //safestrcpy(destination, scource, sizeof scource);
+
+      ++count;
+   
+    }
+  }
+  release(&ptable.lock);
+  return count;
+
+}
+
+
+#endif
+
+
+/*  uint pid;
+  uint uid;
+  uint gid;
+  uint ppid;
+  uint priority;
+  uint elapsed_ticks;
+  uint CPU_total_ticks;
+  char state[STRMAX];
+  uint size;
+  char name[STRMAX];*/
