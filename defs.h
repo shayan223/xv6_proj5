@@ -122,6 +122,13 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 
+#ifdef CS333_P3
+static void initProcessLists(void);
+static void initFreeList(void);
+static void stateListAdd(struct ptrs*, struct proc*);
+static int stateListRemove(struct ptrs*, struct proc* p);
+#endif
+
 // swtch.S
 void            swtch(struct context**, struct context*);
 

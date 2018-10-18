@@ -20,3 +20,6 @@
 #define UID          0   // Default UID of first process
 #define psMAX        64  // Size of uproc table
 #endif
+#ifdef CS333_P3
+#define statecount NELEM(states)
+#endif

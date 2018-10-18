@@ -58,6 +58,9 @@ struct proc {
   uint cpu_ticks_total;
   uint cpu_ticks_in;
   #endif
+  #ifdef CS333_P3
+  proc * next;
+  #endif
 };
 
 #ifdef CS333_P2

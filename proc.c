@@ -18,9 +18,21 @@ static char *states[] = {
 [ZOMBIE]    "zombie"
 };
 
+#ifdef CS333_P3
+struct ptrs {
+  struct proc * head;
+  struct proc * tail;
+};
+#endif
+
+
+
 static struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  #ifdef CS333_P3
+  struct ptrs list[statecount];
+  #endif
 } ptable;
 
 static struct proc *initproc;
@@ -694,3 +706,111 @@ copyProcTable(uint max, struct uproc* table) //gets process info
   char state[STRMAX];
   uint size;
   char name[STRMAX];*/
+
+
+
+#ifdef CS333_P3
+static void
+stateListAdd(struct ptrs* list, struct proc* p)
+{
+  if((*list).head == NULL){
+    (*list).head = p;
+    (*list).tail = p;
+    p -> next = NULL;
+  } else {
+    ((*list).tail -> next = p;
+    (*list).tail = ((*list).tail) -> next;
+    ((*list).tail) -> next = NULL;
+  }
+}
+
+
+static int
+stateListRemove(struct ptrs* list, struct proc* p)
+{
+  if((*list).head == NULL || (*list).tail == NULL || p == NULL)
+  {
+    return -1;
+  }
+
+  struct proc* current = (*list).head;
+  struct proc* previous = 0;
+
+  if(current == p)
+  {
+    (*list).head = ((*list).head) -> next;
+    //prevent tail remaining assigned when we've removed the only item
+    //on the list
+    if((*list).tail == p)
+    {
+      (*list).tail = NULL;
+    }
+    return 0;
+  }
+
+  while(current){
+    if(current == p)
+    {
+      break;
+    }
+
+    previous = current;
+    current = current->next;
+  }
+
+  // Process not found, hit eject.
+  if(current == NULL)
+  {
+    return -1;
+  }
+  // Process found. Set the appropriate next pointer.
+  if(current == (*list).tail)
+  {
+    (*list).tail = previous;
+    ((*list).tail)->next = NULL;
+  } else {
+      previous->next = current->next;
+    }
+  // Make sure p->next doesn’t point into the list.
+  p->next = NULL;
+  return 0;
+}
+
+
+static void
+initProcessLists()
+{
+  int i;
+  for (i = UNUSED; i <= ZOMBIE; i++) 
+  {
+    ptable.list[i].head = NULL;
+    ptable.list[i].tail = NULL;
+
+  }
+
+  #ifdef CS333_P4
+  for (i = 0; i <= MAXPRIO; i++) 
+  {
+  ptable.ready[i].head = NULL;
+  ptable.ready[i].tail = NULL;
+  }
+  #endif
+
+}
+
+
+static void
+initFreeList(void)
+{
+  struct proc* p;
+
+  for(p = ptable.proc; p < ptable.proc + NPROC; ++p){
+    p->state = UNUSED;
+    stateListAdd(&ptable.list[UNUSED], p);
+  }
+}
+
+#endif
+
+
+
