@@ -59,7 +59,7 @@ struct proc {
   uint cpu_ticks_in;
   #endif
   #ifdef CS333_P3
-  proc * next;
+  struct proc * next;
   #endif
 };
 

@@ -188,6 +188,82 @@ struct {
 
 #define C(x)  ((x)-'@')  // Control-x
 
+#ifdef CS333_P3
+
+void
+consoleintr(int (*getc)(void))
+{
+  int c, doprocdump = 0;
+  int doprocR = 0;
+  int doprocF = 0;
+  int doprocS = 0;
+  int doprocZ = 0;
+
+  acquire(&cons.lock);
+  while((c = getc()) >= 0){
+    switch(c){
+    case C('P'):  // Process listing.
+      // procdump() locks cons.lock indirectly; invoke later
+      doprocdump = 1;
+      break;
+    case C('R'):
+      doprocR = 1;
+      break;
+    case C('F'):
+      doprocF = 1;
+      break;
+    case C('S'):
+      doprocS = 1;
+      break;
+    case C('Z'):
+      doprocZ = 1;
+      break;
+    case C('U'):  // Kill line.
+      while(input.e != input.w &&
+            input.buf[(input.e-1) % INPUT_BUF] != '\n'){
+        input.e--;
+        consputc(BACKSPACE);
+      }
+      break;
+    case C('H'): case '\x7f':  // Backspace
+      if(input.e != input.w){
+        input.e--;
+        consputc(BACKSPACE);
+      }
+      break;
+    default:
+      if(c != 0 && input.e-input.r < INPUT_BUF){
+        c = (c == '\r') ? '\n' : c;
+        input.buf[input.e++ % INPUT_BUF] = c;
+        consputc(c);
+        if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
+          input.w = input.e;
+          wakeup(&input.r);
+        }
+      }
+      break;
+    }
+  }
+  release(&cons.lock);
+  if(doprocdump) {
+    procdump();  // now call procdump() wo. cons.lock held
+  }
+  if(doprocR){
+    procR();
+  }
+  if(doprocF){
+    procF();
+  }
+  if(doprocS){
+    procS();
+  }
+  if(doprocZ){
+    procZ();
+  }
+}
+
+#else
+
 void
 consoleintr(int (*getc)(void))
 {
@@ -231,6 +307,9 @@ consoleintr(int (*getc)(void))
     procdump();  // now call procdump() wo. cons.lock held
   }
 }
+
+
+#endif
 
 int
 consoleread(struct inode *ip, char *dst, int n)

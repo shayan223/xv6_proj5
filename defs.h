@@ -9,6 +9,9 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+#ifdef CS333_P3
+struct ptrs;
+#endif
 
 // bio.c
 void            binit(void);
@@ -123,10 +126,14 @@ void            wakeup(void*);
 void            yield(void);
 
 #ifdef CS333_P3
-static void initProcessLists(void);
-static void initFreeList(void);
-static void stateListAdd(struct ptrs*, struct proc*);
-static int stateListRemove(struct ptrs*, struct proc* p);
+//static void initProcessLists(void);
+//static void initFreeList(void);
+//static void stateListAdd(struct ptrs*, struct proc*);
+//static int stateListRemove(struct ptrs* list, struct proc* p);
+void            procR(void);
+void            procF(void);
+void            procS(void);
+void            procZ(void);
 #endif
 
 // swtch.S
