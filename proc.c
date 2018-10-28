@@ -1155,10 +1155,11 @@ static void
 wakeup1(void *chan)
 {
   struct proc *p;
-  
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
-    {
+  struct proc *current = ptable.list[SLEEPING].head;
+  while(current)
+  {
+    p = current;
+    current = current -> next;
       //---Code Added---//
       stateListRemove(&ptable.list[SLEEPING], p);
       if(assertState(p, SLEEPING) < 0)
@@ -1168,7 +1169,8 @@ wakeup1(void *chan)
       p->state = RUNNABLE;
       stateListAdd(&ptable.list[RUNNABLE], p);
       //---------------//
-    }
+    
+  }
 
 }
 
