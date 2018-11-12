@@ -61,6 +61,10 @@ struct proc {
   #ifdef CS333_P3
   struct proc * next;
   #endif
+  #ifdef CS333_P4
+  uint priority;
+  int budget;
+  #endif
 };
 
 #ifdef CS333_P2
