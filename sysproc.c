@@ -213,7 +213,54 @@ sys_getpriority(void)
 }
 #endif
 
+#ifdef CS333_P5
+int
+sys_chmod(void)
+{
+  char *argPath;
+  int argMode;
+  if(argstr(0, &argPath) < 0)
+    return -1; 
 
+  if(argint(1, &argMode) <0)
+    return -1;
+
+  return chmod(argPath, argMode);
+  
+}
+
+int
+chown(void)
+{
+  char *argPath;
+  int argOwner;
+  if(argstr(0, &argPath) < 0)
+    return -1; 
+
+  if(argint(1, &argOwner) <0)
+    return -1;
+
+  return chmod(argPath, argOwner);
+
+}
+
+int
+chgrp(void)
+{
+  char *argPath;
+  int argGroup;
+  if(argstr(0, &argPath) < 0)
+    return -1; 
+
+  if(argint(1, &argGroup) <0)
+    return -1;
+
+  return chmod(argPath, argGroup);
+
+}
+
+
+#endif
 
 
 

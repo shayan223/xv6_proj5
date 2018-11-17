@@ -32,3 +32,6 @@
 #define SYS_ps      SYS_getprocs+1
 #define SYS_setpriority SYS_ps+1
 #define SYS_getpriority SYS_setpriority+1
+#define SYS_chmod   SYS_getpriority+1
+#define SYS_chown   SYS_chmod+1
+#define SYS_chgrp   SYS_chown+1

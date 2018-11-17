@@ -489,6 +489,10 @@ userinit(void)
   // writes to be visible, and the lock is also needed
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
+  #ifdef CS333_P2
+  p -> uid = UID;
+  p -> gid = GID;
+  #endif
   p->state = RUNNABLE;
   release(&ptable.lock);
 }
@@ -2506,5 +2510,35 @@ getpriority(int pid)
 
 
 #endif
+
+
+#ifdef CS333_P5
+
+int 
+chmod(char *pathname, int mode)
+{
+
+  return -1;
+}
+
+int
+chown(char *pathname, int mode)
+{
+
+  return -1;
+}
+
+int
+chgrp(char *pathname, int group)
+{
+
+  return -1;
+}
+
+#endif
+
+
+
+
 
 

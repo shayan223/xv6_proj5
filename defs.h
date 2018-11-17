@@ -141,6 +141,12 @@ int             setpriority(int pid, int priority);
 int             getpriority(int pid);
 #endif
 
+#ifdef CS333_P5
+int             chmod(char *pathname, int mode);
+int             chmod(char *pathname, int owner);
+int             chmod(char *pathname, int group);
+#endif
+
 // swtch.S
 void            swtch(struct context**, struct context*);
 
