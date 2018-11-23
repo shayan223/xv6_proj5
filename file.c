@@ -9,6 +9,9 @@
 #include "spinlock.h"
 #include "sleeplock.h"
 #include "file.h"
+#ifdef CS333_P5
+//#include "proc.h"
+#endif
 
 struct devsw devsw[NDEV];
 struct {
@@ -154,4 +157,7 @@ filewrite(struct file *f, char *addr, int n)
   }
   panic("filewrite");
 }
+
+
+
 

@@ -2511,7 +2511,7 @@ getpriority(int pid)
 
 #endif
 
-
+/*
 #ifdef CS333_P5
 
 int 
@@ -2536,7 +2536,7 @@ chgrp(char *pathname, int group)
 }
 
 #endif
-
+*/
 
 
 

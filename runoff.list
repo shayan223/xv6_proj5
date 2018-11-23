@@ -98,3 +98,9 @@ zTest.c
 p4-test.c
 setP-test.c
 getP-test.c
+p5-test.h
+p5-test.c
+chmod.c
+chown.c
+chgrp.c
+print_mode.c

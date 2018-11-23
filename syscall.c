@@ -123,9 +123,9 @@ extern int sys_getpriority(void);
 #endif
 
 #ifdef CS333_P5
-extern int chmod(void);
-extern int chown(void);
-extern int chgrp(void);
+extern int sys_chmod(void);
+extern int sys_chown(void);
+extern int sys_chgrp(void);
 #endif
 
 #ifdef PDX_XV6
@@ -171,6 +171,12 @@ static int (*syscalls[])(void) = {
 #ifdef CS333_P4
 [SYS_setpriority] sys_setpriority,
 [SYS_getpriority] sys_getpriority,
+#endif
+
+#ifdef CS333_P5
+[SYS_chmod] sys_chmod,
+[SYS_chown] sys_chown,
+[SYS_chgrp] sys_chgrp,
 #endif
 
 #ifdef PDX_XV6

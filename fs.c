@@ -207,6 +207,11 @@ ialloc(uint dev, short type)
       dip->type = type;
       log_write(bp);   // mark it allocated on the disk
       brelse(bp);
+#ifdef CS333_P5
+      dip -> uid = UID;
+      dip -> gid = GID;
+      dip -> mode.asInt = MODE;
+#endif
       return iget(dev, inum);
     }
     brelse(bp);
@@ -231,6 +236,13 @@ iupdate(struct inode *ip)
   dip->minor = ip->minor;
   dip->nlink = ip->nlink;
   dip->size = ip->size;
+
+#ifdef CS333_P5  //TODO
+  dip ->mode.asInt = ip -> mode.asInt;
+  dip -> uid = ip -> uid;
+  dip -> gid = ip -> gid;
+#endif
+
   memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
   log_write(bp);
   brelse(bp);
@@ -304,6 +316,11 @@ ilock(struct inode *ip)
     ip->minor = dip->minor;
     ip->nlink = dip->nlink;
     ip->size = dip->size;
+#ifdef CS333_P5
+    ip->mode.asInt = dip->mode.asInt;
+    ip->uid = dip->uid;
+    ip->gid = dip->gid;
+#endif
     memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
     brelse(bp);
     ip->valid = 1;
@@ -445,6 +462,11 @@ stati(struct inode *ip, struct stat *st)
   st->type = ip->type;
   st->nlink = ip->nlink;
   st->size = ip->size;
+#ifdef CS333_P5//TODO
+  st->mode.asInt = ip->mode.asInt;
+  st->uid = ip->uid;
+  st->gid = ip->gid;
+#endif
 }
 
 //PAGEBREAK!
@@ -669,4 +691,107 @@ nameiparent(char *path, char *name)
 {
   return namex(path, 1, name);
 }
+
+
+#ifdef CS333_P5
+
+int 
+chmod(char *pathname, int mode)
+{
+  
+
+  begin_op(); 
+  struct inode *ip;
+  if((ip = namei(pathname)) == 0){
+    end_op();
+    cprintf("chmod: fail\n");
+    return -1;
+  }
+
+  ilock(ip);
+  ip -> mode.asInt = mode;
+  iupdate(ip);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+  return 0;
+}
+
+int
+chown(char *pathname, int owner)
+{
+  begin_op();
+  struct inode *ip;
+  if((ip = namei(pathname)) == 0){
+    end_op();
+    cprintf("chown: fail\n");
+    return -1;
+  }
+  ilock(ip);
+  ip -> uid = owner;
+  iupdate(ip);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+  return 0;
+}
+
+int
+chgrp(char *pathname, int group)
+{
+  begin_op();
+  struct inode *ip;
+  if((ip = namei(pathname)) == 0){
+    end_op();
+    cprintf("chgrp: fail\n");
+    return -1;
+  }
+
+  ilock(ip);
+  ip -> gid = group;
+  iupdate(ip);
+  iunlock(ip);
+  iput(ip);
+  end_op();
+  return 0;
+}
+
+#endif
+
+
+
+#ifdef CS333_P5
+
+int
+assertperm(struct inode *ip, struct proc *curproc)
+{
+  
+  int perms = 0;
+  if(ip -> uid == curproc -> uid)
+  {
+    if(ip -> mode.flags.u_x == 1)
+      perms = 1;
+  }
+  else if(ip -> gid == curproc -> gid)
+  {
+    if(ip -> mode.flags.g_x == 1)
+      perms = 1;
+  }
+  else if(ip -> mode.flags.o_x == 1)
+  {
+    perms = 1;
+  }
+
+  if(perms == 0)
+  {
+    return -1;
+  }
+  if(ip ->mode.flags.setuid)
+  {
+    curproc -> uid = ip -> uid;
+  }
+  return 0;
+}
+#endif
+
 

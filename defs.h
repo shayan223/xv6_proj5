@@ -37,6 +37,7 @@ int             fileread(struct file*, char*, int n);
 int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
 
+
 // fs.c
 void            readsb(int dev, struct superblock *sb);
 int             dirlink(struct inode*, char*, uint);
@@ -55,6 +56,10 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
+#ifdef CS333_P5
+int             assertperm(struct inode*ip, struct proc *curproc);
+#endif
+
 
 
 // ide.c
@@ -141,10 +146,11 @@ int             setpriority(int pid, int priority);
 int             getpriority(int pid);
 #endif
 
+//fs.c
 #ifdef CS333_P5
 int             chmod(char *pathname, int mode);
-int             chmod(char *pathname, int owner);
-int             chmod(char *pathname, int group);
+int             chown(char *pathname, int owner);
+int             chgrp(char *pathname, int group);
 #endif
 
 // swtch.S

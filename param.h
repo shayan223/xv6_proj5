@@ -28,3 +28,6 @@
 #define TICKS_TO_PROMOTE 3000
 #define BUDGET       300
 #endif
+#ifdef CS333_P5
+#define MODE         0755 //default mode value
+#endif

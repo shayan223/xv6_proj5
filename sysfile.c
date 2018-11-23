@@ -443,3 +443,59 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+
+
+#ifdef CS333_P5
+int
+sys_chmod(void)
+{
+  char *argPath;
+  int argMode;
+  if(argstr(0, &argPath) < 0)
+    return -1; 
+  if(argint(1, &argMode) <0)
+    return -1;
+  if(argMode < 0 || argMode > 1023)
+    return -1;
+  return chmod(argPath, argMode);
+  
+}
+
+int
+sys_chown(void)
+{
+  char *argPath;
+  int argOwner;
+  if(argint(1, &argOwner) < 0)
+    return -1;
+  if(argstr(0, &argPath) < 0)
+    return -1; 
+  if(argOwner < 0)
+    return -1;
+
+
+  return chown(argPath, argOwner);
+
+}
+
+int
+sys_chgrp(void)
+{
+  char *argPath;
+  int argGroup;
+
+  if(argint(1, &argGroup) <0)
+    return -1;
+  if(argstr(0, &argPath) < 0)
+    return -1; 
+
+
+  return chgrp(argPath, argGroup);
+
+}
+
+
+#endif
+
+

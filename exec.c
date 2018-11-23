@@ -6,7 +6,9 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
-
+#ifdef CS333_P5
+//#include "file.h"
+#endif
 
 int
 exec(char *path, char **argv)
@@ -27,8 +29,18 @@ exec(char *path, char **argv)
     cprintf("exec: fail\n");
     return -1;
   }
+
   ilock(ip);
   pgdir = 0;
+
+#ifdef CS333_P5//TODO
+  if(assertperm(ip, curproc) < 0)
+  {
+    goto bad;
+  }
+#endif
+
+
 
   // Check ELF header
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
@@ -38,6 +50,7 @@ exec(char *path, char **argv)
 
   if((pgdir = setupkvm()) == 0)
     goto bad;
+
 
   // Load program into memory.
   sz = 0;
