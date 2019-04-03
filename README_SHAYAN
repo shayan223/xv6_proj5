@@ -1,0 +1,14 @@
+This project is my implementation of multiple features to the xv6 operating system
+
+Please view other README's for credits and copy write information
+
+This repository holds 5 different projects/modifications. You may compile and run any of them by changing the 
+project variable in the makefile to the desired project number.
+
+The projects implement different features as follows:
+
+1. date system call and process list display
+2. Process structures and "ps" command
+3. More efficient process management (process life cycle with complex concurrency control rather than a simple process list) 
+4. MLFQ (Multi Level Feedback Queue) for process management
+5. file permissions
